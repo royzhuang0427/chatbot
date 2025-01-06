@@ -1,0 +1,3 @@
+要新增一個.env檔
+加在ENGLISHTEST底下
+內容就是API KEY不知道內容要打啥問我
