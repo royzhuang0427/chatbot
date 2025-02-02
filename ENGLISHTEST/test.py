@@ -16,17 +16,17 @@ scoring_system = AnswerScoring()
 
 load_dotenv("C:\\chatbot\\ENGLISHTEST\\.env")
 if not os.getenv('GROQ_API_KEY'):
-    print("警告: GROQ_API_KEY 未設置")
+    raise ValueError("GROQ_API_KEY 未設置")
 groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
 
 sys_msg = (
     "You are an experienced English teacher specializing in TOEIC preparation. "
-    "Your responsibilities include: "
-    "1. Creating TOEIC-style questions when requested "
-    "2. Providing detailed explanations for answers "
-    "3. Teaching relevant grammar points and vocabulary "
-    "4. Giving study tips and strategies "
-    "5. Correcting student's English mistakes "
+    # "Your responsibilities include: "
+    # "1. Creating TOEIC-style questions when requested "
+    # "2. Providing detailed explanations for answers "
+    # "3. Teaching relevant grammar points and vocabulary "
+    # "4. Giving study tips and strategies "
+    # "5. Correcting student's English mistakes "
     "Please ensure all responses are in proper English. "
     "When explaining, be thorough but easy to understand. "
     "Always maintain a supportive and encouraging teaching tone."
@@ -70,7 +70,7 @@ def groq_prompt(prompt):
 
 
 
-folder_path = "C:\\chatbot\\ENGLISHTEST\\result"
+folder_path = "C:\\chatbot\\ENGLISHTEST\\source"
 output_txt_path = "C:\\chatbot\\ENGLISHTEST\\result.txt"
 
 
@@ -93,6 +93,7 @@ def generate_response_with_context(query):
             return groq_prompt(query)
         else:
             prompt = (
+                f"For non-test questions, provide a normal response without these separators."
                 f"As an English teacher, please help with the following request while considering "
                 f"this reference material: {relevant_texts}\n\n"
                 f"Student's request: {query}\n\n"
@@ -102,8 +103,7 @@ def generate_response_with_context(query):
                 f"===EXPLANATION===\n"
                 f"Correct Answer: [letter]\n"
                 f"[Explanation]\n"
-                f"===QUESTION END===\n\n"
-                f"For non-test questions, provide a normal response without these separators."
+                f"===QUESTION END===\n\n"       
             )
             response = groq_prompt(prompt)
 
@@ -207,7 +207,6 @@ def show_results():
 if __name__ == "__main__":
     try:
         vector_db = VectorDB()
-        
         if not is_db_initialized:
             pdf_texts = vector_db.read_pdfs_in_folder(folder_path)
             if pdf_texts:
@@ -232,19 +231,6 @@ if __name__ == "__main__":
                 elif query.lower() == 'reembedding':
                     vector_db.reembedding(folder_path)
                     continue
-                elif query.lower() == 'reload':
-                    is_db_initialized = False
-                    pdf_texts = vector_db.read_pdfs_in_folder(folder_path)
-                    if pdf_texts:
-                        save_source_in_txt(pdf_texts, output_txt_path)
-                        for text in pdf_texts:
-                            if vector_db.add_text(text):
-                                print("添加了新文本")
-                            else:
-                                print("文本已存在，跳過處理")
-                        is_db_initialized = True
-                    continue
-                
                 response = generate_response_with_context(query)
                 save_response_to_txt(query, response)
                 print("\nGenAI 回覆:", response)
@@ -255,3 +241,5 @@ if __name__ == "__main__":
 
     except Exception as e:
         print(f"初始化過程出錯: {str(e)}")
+    finally:
+        vector_db.close()  

@@ -132,7 +132,6 @@ class VectorDB:
 
 
     def reembedding(self, folder_path):
-        """重新執行embedding過程"""
         try:
             print("開始重新embedding...")
             self.clear_all()
